@@ -23,10 +23,10 @@ Use the `playwright` MCP server to:
 1. Launch a Chromium browser (headless is fine).
 2. Navigate to `https://github.com/`.
 3. Wait for the page to be fully loaded.
-4. Select **one stable, visible element** that contains non-dynamic, readable text — good candidates include navigation links (e.g. "Sign in", "Features", "Enterprise", "Pricing") or a heading. Avoid elements whose text changes based on login state if possible; "Sign in" is a reliable choice.
-5. Record:
-   - The **Playwright locator** for that element (e.g. `page.GetByRole(AriaRole.Link, new() { Name = "Sign in" })` or `page.Locator("a.HeaderMenu-link[href='/login']")`)
-   - The **exact text** the element contains (e.g. `"Sign in"`)
+4. Select randonly **one stable, visible element** that contains non-dynamic, readable text 
+5. Save and Record:
+   - The **Playwright locator** for that element (e.g. `page.GetByRole(AriaRole.Link, new() { Name = "Element Name" })` or `page.Locator("a.HeaderMenu-link[href='/some_names']")`)
+   - The **exact text** the element contains (e.g. `"Element Name"`)
 6. Close the browser.
 
 ### Step 2 — Add Microsoft.Playwright.NUnit Package
