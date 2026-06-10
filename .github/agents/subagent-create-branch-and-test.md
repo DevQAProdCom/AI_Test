@@ -7,10 +7,8 @@ description: >
   PlaywrightTest.cs.
 model: copilot-default
 tools:
-  - type: mcp
-    server: github
-  - type: mcp
-    server: playwright
+  - github
+  - playwright
 ---
 
 # Subagent: Create Branch and Test

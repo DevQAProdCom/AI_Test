@@ -6,8 +6,7 @@ description: >
   and fixes failures until all tests pass (up to 5 iterations).
 model: copilot-default
 tools:
-  - type: mcp
-    server: github
+  - github
 ---
 
 # Subagent: Run and Fix Tests

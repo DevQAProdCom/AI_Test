@@ -6,10 +6,8 @@ description: >
   and one that runs the test and applies fixes until it passes.
 model: copilot-default
 tools:
-  - type: mcp
-    server: github
-  - type: mcp
-    server: playwright
+  - github
+  - playwright
 ---
 
 # Playwright Orchestrator Agent
