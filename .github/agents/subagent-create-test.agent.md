@@ -23,7 +23,7 @@ Use the `playwright` MCP server to:
 1. Launch a Chromium browser (headless is fine).
 2. Navigate to `https://github.com/`.
 3. Wait for the page to be fully loaded.
-4. Select randonly **one stable, visible element** that contains non-dynamic, readable text 
+4. Select  **randomly five stable, visible element** that contains non-dynamic, readable text. Don't select "Sign In". 
 5. Save and Record:
    - The **Playwright locator** for that element (e.g. `page.GetByRole(AriaRole.Link, new() { Name = "Element Name" })` or `page.Locator("a.HeaderMenu-link[href='/some_names']")`)
    - The **exact text** the element contains (e.g. `"Element Name"`)
