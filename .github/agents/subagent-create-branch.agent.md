@@ -6,8 +6,6 @@ description: >
   Microsoft.Playwright.NUnit package, and writes a verified async NUnit Playwright test in
   PlaywrightTest.cs.
 model: copilot-default
-tools:
-  - github
 ---
 
 # Subagent: Create Branch

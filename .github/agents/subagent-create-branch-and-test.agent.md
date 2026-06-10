@@ -6,9 +6,6 @@ description: >
   Microsoft.Playwright.NUnit package, and writes a verified async NUnit Playwright test in
   PlaywrightTest.cs.
 model: copilot-default
-tools:
-  - github
-  - playwright
 ---
 
 # Subagent: Create Branch and Test
@@ -26,14 +23,14 @@ tools:
 ### Step 1 — Generate Branch Name
 
 Compute the current UTC timestamp in the format `yyyy-MM-dd_hh-mm-ss` (e.g. `2026-12-01_14-30-00`).
-Construct the branch name as: `feature/github-home-test-{date}` (e.g. `feature/github-home-test-2026-12-01_14-30-00`).
+Construct the branch name as: `feature/github--test-{date}` (e.g. `feature/github-test-2026-12-01_14-30-00`).
 
 ### Step 2 — Create Branch via GitHub MCP
 
 Use the `github` MCP server to create the new branch:
 - Owner: `DevQAProdCom`
 - Repo: `AI_Test`
-- New branch name: `feature/github-home-test-{date}` (computed above)
+- New branch name: `feature/github-test-{date}` (computed above)
 - Source branch: `feature/playwright-orchestrator`
 
 ### Step 3 — Inspect GitHub Homepage with Playwright MCP

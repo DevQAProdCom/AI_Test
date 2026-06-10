@@ -5,9 +5,6 @@ description: >
   two subagents in sequence: one that creates the branch and writes the test,
   and one that runs the test and applies fixes until it passes.
 model: copilot-default
-tools:
-  - github
-  - playwright
 ---
 
 # Playwright Orchestrator Agent
