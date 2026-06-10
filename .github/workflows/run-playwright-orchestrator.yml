@@ -1,0 +1,242 @@
+name: Run Playwright Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: Base branch to create the test branch from
+        required: false
+        default: feature/playwright-orchestrator
+  push:
+    branches:
+      - feature/playwright-orchestrator
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+  issues: write
+
+jobs:
+  run-playwright-orchestrator:
+    name: Run Playwright Orchestrator
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── Phase 1: Checkout Repository ────────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base_branch || 'feature/playwright-orchestrator' }}
+          fetch-depth: 0
+          token: ${{ secrets.COPILOT_AGENT_PAT }}
+
+      # ─── Phase 2: Setup .NET Environment ─────────────────────────────────────
+      - name: Setup .NET Environment
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # ─── Phase 3: Setup Node.js Environment ──────────────────────────────────
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ─── Phase 4: Install PowerShell ─────────────────────────────────────────
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y powershell
+
+      # ─── Phase 5: Install Playwright System Dependencies ─────────────────────
+      - name: Install Playwright System Dependencies
+        run: |
+          dotnet restore Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj || true
+          dotnet build Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj \
+            --configuration Debug --no-restore || true
+          if [ -f "Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1" ]; then
+            pwsh Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1 \
+              install chromium --with-deps
+          else
+            npm install -g @playwright/test
+            npx playwright install chromium --with-deps
+          fi
+
+      # ─── Phase 6: Install GitHub CLI ─────────────────────────────────────────
+      - name: Install GitHub CLI
+        run: |
+          (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+            && sudo mkdir -p -m 755 /etc/apt/keyrings \
+            && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+            && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+            && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+              | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+            && sudo apt update \
+            && sudo apt install gh -y
+          gh --version
+
+      # ─── Phase 7: Authenticate GitHub CLI ────────────────────────────────────
+      - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_PAT }}
+        run: |
+          echo "$GH_TOKEN" | gh auth login --with-token
+          gh auth status
+
+      # ─── Phase 8: Invoke Orchestrator Playwright-Orchestrator ────────────────
+      - name: Invoke Orchestrator Playwright-Orchestrator
+        id: invoke_orchestrator
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_PAT }}
+          REPO: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.event.inputs.base_branch || 'feature/playwright-orchestrator' }}
+        run: |
+          echo "Reading orchestrator agent prompt from .github/agents/playwright-orchestrator.md..."
+
+          ORCHESTRATOR_PROMPT=$(cat .github/agents/playwright-orchestrator.md)
+
+          FULL_PROMPT="You are executing the Playwright Orchestrator agent.
+
+          Repository: $REPO
+          Base branch: $BASE_BRANCH
+
+          ${ORCHESTRATOR_PROMPT}
+
+          Follow the orchestrator instructions exactly. Invoke subagent 'Create Branch and Test'
+          first (defined in .github/agents/subagent-create-branch-and-test.md), then invoke
+          subagent 'Run and Fix Tests' (defined in .github/agents/subagent-run-and-fix-tests.md).
+          Report the final outcome including branch name and test pass/fail status."
+
+          echo "Creating Copilot agent task..."
+
+          RESPONSE=$(gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${REPO}/copilot/tasks" \
+            -f "prompt=${FULL_PROMPT}" \
+            --jq '.')
+
+          echo "Task creation response:"
+          echo "$RESPONSE"
+
+          TASK_ID=$(echo "$RESPONSE" | jq -r '.task_id // .id // empty')
+          if [ -z "$TASK_ID" ]; then
+            echo "::error::Failed to extract task_id from response. Full response: $RESPONSE"
+            exit 1
+          fi
+
+          echo "task_id=$TASK_ID" >> "$GITHUB_OUTPUT"
+          echo "Orchestrator task created with ID: $TASK_ID"
+
+      # ─── Phase 9: Poll for Orchestrator Task Completion ──────────────────────
+      - name: Poll for Orchestrator Task Completion
+        id: poll_orchestrator
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_PAT }}
+          REPO: ${{ github.repository }}
+          TASK_ID: ${{ steps.invoke_orchestrator.outputs.task_id }}
+        run: |
+          echo "Polling task $TASK_ID for completion (timeout: 30 minutes)..."
+          MAX_ATTEMPTS=60
+          SLEEP_SECONDS=30
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Attempt $ATTEMPT / $MAX_ATTEMPTS — checking task status..."
+
+            STATUS_RESPONSE=$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/${REPO}/copilot/tasks/${TASK_ID}" \
+              --jq '.')
+
+            STATUS=$(echo "$STATUS_RESPONSE" | jq -r '.status // empty')
+            echo "Current status: $STATUS"
+
+            if [ "$STATUS" = "completed" ] || [ "$STATUS" = "succeeded" ]; then
+              echo "Orchestrator task completed successfully."
+              echo "task_status=success" >> "$GITHUB_OUTPUT"
+              RESULT_SUMMARY=$(echo "$STATUS_RESPONSE" | jq -r '.result // .summary // "No summary available"')
+              echo "Result summary: $RESULT_SUMMARY"
+              break
+            elif [ "$STATUS" = "failed" ] || [ "$STATUS" = "error" ]; then
+              ERROR_MSG=$(echo "$STATUS_RESPONSE" | jq -r '.error // .message // "Unknown error"')
+              echo "::error::Orchestrator task failed: $ERROR_MSG"
+              echo "task_status=failed" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+
+            echo "Task still running. Waiting ${SLEEP_SECONDS}s before next check..."
+            sleep $SLEEP_SECONDS
+          done
+
+          if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+            echo "::error::Orchestrator task timed out after $((MAX_ATTEMPTS * SLEEP_SECONDS / 60)) minutes."
+            echo "task_status=timeout" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      # ─── Phase 10: Fetch Agent-Created Branch ────────────────────────────────
+      - name: Fetch Agent-Created Branch
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_AGENT_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Fetching all remote branches created by the orchestrator..."
+          git fetch --all --prune
+
+          AGENT_BRANCH=$(git branch -r \
+            | grep 'origin/feature/github-home-test-' \
+            | sort -r \
+            | head -1 \
+            | tr -d ' ' \
+            | sed 's|origin/||')
+
+          if [ -z "$AGENT_BRANCH" ]; then
+            echo "::warning::Could not find agent-created branch. Skipping verification step."
+          else
+            echo "Found agent branch: $AGENT_BRANCH"
+            git checkout "$AGENT_BRANCH"
+            echo "Checked out $AGENT_BRANCH"
+          fi
+
+      # ─── Phase 11: Verify Playwright Test Results ─────────────────────────────
+      - name: Verify Playwright Test Results
+        env:
+          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+        run: |
+          echo "Verifying Playwright tests on agent branch..."
+
+          if [ ! -f "Tests.AI_TEST.Playwright/PlaywrightTest.cs" ]; then
+            echo "::error::PlaywrightTest.cs not found. The orchestrator may not have completed correctly."
+            exit 1
+          fi
+
+          dotnet restore Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj
+          dotnet build Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj \
+            --configuration Debug --no-restore
+
+          if [ -f "Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1" ]; then
+            pwsh Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1 \
+              install chromium --with-deps
+          fi
+
+          dotnet test Tests.AI_TEST.Playwright \
+            --configuration Debug \
+            --logger "console;verbosity=detailed" \
+            --logger "trx;LogFileName=test-results.trx"
+
+          echo "All Playwright tests passed."
+
+      # ─── Phase 12: Upload Test Results Artifact ───────────────────────────────
+      - name: Upload Test Results Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: Tests.AI_TEST.Playwright/**/*.trx
+          if-no-files-found: warn
