@@ -3,8 +3,7 @@ name: List Remote Branches
 description: >
   Lists Remote Branches
 model: copilot-default
-tools:
-  - github
+tools: [ "github"]
 ---
 
 # Subagent: List Remote Branches
