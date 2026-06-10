@@ -39,10 +39,10 @@ Use the `playwright` MCP server to:
 1. Launch a Chromium browser (headless is fine).
 2. Navigate to `https://github.com/`.
 3. Wait for the page to be fully loaded.
-4. Select randomly **five stable, visible elements** that contains non-dynamic, readable text — good candidates include navigation links (e.g. "Sign in", "Features", "Enterprise", "Pricing") or a heading. Avoid elements whose text changes based on login state if possible; "Sign in" is a reliable choice.
-5. Record:
-   - The **Playwright locator** for that element (e.g. `page.GetByRole(AriaRole.Link, new() { Name = "Sign in" })` or `page.Locator("a.HeaderMenu-link[href='/login']")`)
-   - The **exact text** the element contains (e.g. `"Sign in"`)
+4. Select  **randomly five stable, visible element** that contains non-dynamic, readable text. Don't select "Sign In". 
+5. Save and Record:
+   - The **Playwright locator** for that element (e.g. `page.GetByRole(AriaRole.Link, new() { Name = "Element Name" })` or `page.Locator("a.HeaderMenu-link[href='/some_names']")`)
+   - The **exact text** the element contains (e.g. `"Element Name"`)
 6. Close the browser.
 
 ### Step 4 — Add Microsoft.Playwright.NUnit Package
@@ -57,7 +57,7 @@ inside the existing `<ItemGroup>` that contains `PackageReference` elements.
 
 ### Step 5 — Write the Playwright Test
 
-Replace the contents of `Tests.AI_TEST.Playwright/PlaywrightTest.cs` with the following template, filling in `LOCATOR_EXPRESSION` and `EXPECTED_TEXT` from Step 3:
+Replace the contents of `Tests.AI_TEST.Playwright/PlaywrightTest.cs` with the following template, filling in `LOCATOR_EXPRESSION` and `EXPECTED_TEXT` from Step 3. Do it for 1 randomly picked element:
 
 ```csharp
 using Microsoft.Playwright.NUnit;
@@ -78,10 +78,6 @@ namespace Tests.AI_TEST.Playwright
     }
 }
 ```
-
-Replace:
-- `LOCATOR_EXPRESSION` → the C# Playwright locator expression from Step 3 (using `Page.`)
-- `"EXPECTED_TEXT"` → the exact text string from Step 3
 
 ### Step 6 — Commit and Push Changes
 
