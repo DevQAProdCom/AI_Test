@@ -1,5 +1,5 @@
 ---
-name: Create Branch and Test
+name: Create Branch
 description: >
   Creates a dated feature branch from feature/playwright-orchestrator, uses Playwright MCP
   to inspect https://github.com/, captures a stable element locator and its text, adds the
