@@ -1,16 +1,17 @@
+using Microsoft.Playwright.NUnit;
+using Microsoft.Playwright;
+
 namespace Tests.AI_TEST.Playwright
 {
-    public class Tests
+    [TestFixture]
+    public class Tests : PageTest
     {
-        [SetUp]
-        public void Setup()
-        {
-        }
-
         [Test]
-        public void Test1()
+        public async Task GitHubHomePage_ElementHasExpectedText()
         {
-            Assert.Pass();
+            await Page.GotoAsync("https://github.com/");
+            var element = Page.GetByRole(AriaRole.Link, new() { Name = "Why GitHub" });
+            await Expect(element).ToHaveTextAsync("Why GitHub");
         }
     }
 }
