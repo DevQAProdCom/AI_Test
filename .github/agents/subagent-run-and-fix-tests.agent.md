@@ -5,8 +5,6 @@ description: >
   installs .NET Playwright browsers, runs dotnet test, and iteratively diagnoses
   and fixes failures until all tests pass (up to 5 iterations).
 model: copilot-default
-tools:
-  - github
 ---
 
 # Subagent: Run and Fix Tests
