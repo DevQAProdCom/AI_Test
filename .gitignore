@@ -377,3 +377,5 @@ MigrationBackup/
 
 LOCAL*
 local*
+
+.playwright-mcp/
