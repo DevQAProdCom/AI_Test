@@ -19,19 +19,21 @@ model: copilot-default
 - Project file: `Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj`
 
 ## Step-by-Step Instructions
-fhome
+
 ### Step 1 — Generate Branch Name
 
 Compute the current UTC timestamp in the format `yyyy-MM-dd_hh-mm-ss` (e.g. `2026-12-01_14-30-00`).
-Construct the branch name as: `feature/github-test-{date}` (e.g. `feature/github-test-2026-12-01_14-30-00`).
+Construct the branch name as: `copilot/feature/github-test-{date}` (e.g. `copilot/feature/github-test-2026-12-01_14-30-00`).
 
 ### Step 2 — Create Branch via GitHub MCP
 
 Use the `github` MCP server to create the new branch:
 - Owner: `DevQAProdCom`
 - Repo: `AI_Test`
-- New branch name: `feature/github-test-{date}` (computed above)
+- New branch name: `copilot/feature/github-test-{date}` (computed above)
 - Source branch: `feature/playwright-orchestrator`
+
+Make sure that new branch name starts with `copilot/` to avoid "repository branch creation restriction".
 
 ### Step 3 — Push Changes
 Use the `github` MCP server to switch to the new branch

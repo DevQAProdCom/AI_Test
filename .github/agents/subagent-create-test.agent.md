@@ -5,7 +5,7 @@ description: >
 model: copilot-default
 ---
 
-# Subagent: Create Branch and Test
+# Subagent: Create Test
 
 ## Context
 
