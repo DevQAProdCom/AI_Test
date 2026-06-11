@@ -1,0 +1,81 @@
+name: Run Playwright Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: Base branch to create the test branch from
+        required: false
+        default: feature/playwright-orchestrator
+
+permissions:
+  contents: write
+  pull-requests: write
+  models: read
+  issues: write
+
+jobs:
+  run-playwright-orchestrator:
+    name: Run Playwright Orchestrator
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── Phase 1: Checkout Repository ────────────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.base_branch || 'feature/playwright-orchestrator' }}
+          fetch-depth: 1
+          token: ${{ secrets.REPO_TOKEN }}
+
+      # ─── Phase 2: Setup .NET Environment ─────────────────────────────────────
+      - name: Setup .NET Environment
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # ─── Phase 3: Setup Node.js Environment ──────────────────────────────────
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ─── Phase 4: Install PowerShell ─────────────────────────────────────────
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y powershell
+
+      # ─── Phase 5: Install Playwright System Dependencies ─────────────────────
+      - name: Install Playwright System Dependencies
+        run: |
+          dotnet restore Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj || true
+          dotnet build Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj \
+            --configuration Debug --no-restore || true
+          if [ -f "Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1" ]; then
+            pwsh Tests.AI_TEST.Playwright/bin/Debug/net8.0/playwright.ps1 \
+              install chromium --with-deps
+          else
+            npm install -g @playwright/test
+            npx playwright install chromium --with-deps
+          fi
+
+      # ─── Phase 6: Install GitHub Copilot CLI ─────────────────────────────────────────
+      - name: Install GitHub Copilot CLI
+        run: |
+          set -e
+          echo "Installing GitHub Copilot CLI using official install script..."
+          curl -fsSL https://gh.io/copilot-install | sudo bash
+
+      # ─── Phase 7: Set Tokens ────────────────────────────────────
+      - name: Set Tokens
+        run: |
+          echo "COPILOT_GITHUB_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
+          echo "GITHUB_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
+          echo "GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
+
+      # ─── Phase 8: Invoke Orchestrator Playwright-Orchestrator ────────────────
+      - name: Invoke Orchestrator Playwright-Orchestrator
+        run: |
+         echo "Running Copilot agent 'Playwright-Orchestrator'"
+         copilot --agent playwright-orchestrator --allow-all-tools -p "Execute Agent"
