@@ -76,7 +76,7 @@ jobs:
         run: |
           echo "COPILOT_GITHUB_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
           echo "GITHUB_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
-          echo "PERSONAL_ACCESS_TOKEN_GITHUB=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
+          echo "COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN=${{ secrets.REPO_TOKEN }}" >> $GITHUB_ENV
 
       # ─── Phase 8: Invoke Orchestrator Playwright-Orchestrator ────────────────
       - name: Invoke Orchestrator Playwright-Orchestrator
