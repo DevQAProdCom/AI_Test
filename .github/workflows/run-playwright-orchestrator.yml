@@ -7,6 +7,10 @@ on:
         description: Base branch to create the test branch from
         required: false
         default: feature/playwright-orchestrator
+      agent_name:
+        description: "Agent to run (valid: playwright-orchestrator, list_remote_branches, subagent-create-branch, subagent-create-branch-and-test, subagent-create-test, subagent-run-and-fix-tests)"
+        required: true
+        default: playwright-orchestrator
 
 permissions:
   contents: write
@@ -78,4 +82,4 @@ jobs:
       - name: Invoke Orchestrator Playwright-Orchestrator
         run: |
          echo "Running Copilot agent 'Playwright-Orchestrator'"
-         copilot --agent playwright-orchestrator --allow-all-tools -p "Execute Agent"
+         copilot --agent "${{ github.event.inputs.agent_name }}" --allow-all-tools -p "Execute Agent"
