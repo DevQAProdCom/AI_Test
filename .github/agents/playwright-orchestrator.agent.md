@@ -18,7 +18,7 @@ You are an orchestrator agent. Your responsibility is to coordinate two subagent
 Invoke the subagent described in `.github/agents/subagent-create-branch-and-test.md`.
 
 That subagent must complete **all** of the following before you move to Phase 2:
-1. Create a new git branch from `feature/playwright-orchestrator` with the name `feature/{test}-{date}` where `{date}` uses the format `yyyy-MM-dd_hh-mm-ss` (e.g. `feature/github-home-test-2026-12-01_12-00-00`).
+1. Create a new git branch from `feature/playwright-orchestrator` with the name `copilot/feature/{test}-{date}` where `{date}` uses the format `yyyy-MM-dd_hh-mm-ss` (e.g. `feature/github-test-2026-12-01_12-00-00`).
 2. Use the Playwright MCP server to navigate to `https://github.com/` in a real browser.
 3. Identify a stable, visible element on the page that contains readable text. Capture its full Playwright locator and the exact text it contains.
 4. Add the `Microsoft.Playwright.NUnit` NuGet package to `Tests.AI_TEST.Playwright/Tests.AI_TEST.Playwright.csproj`.

@@ -20,7 +20,7 @@ model: copilot-default
 ## Input Required
 
 Receive from the orchestrator:
-- `branch_name`: the branch created by the previous subagent (e.g. `feature/github-home-test-2026-12-01_14-30-00`)
+- `branch_name`: the branch created by the previous subagent (e.g. `copilot/feature/github-test-2026-12-01_14-30-00`)
 - `locator_expression`: the Playwright C# locator used in the test
 - `expected_text`: the asserted text string
 
