@@ -7,9 +7,6 @@ on:
         description: Base branch to create the test branch from
         required: false
         default: feature/playwright-orchestrator
-  push:
-    branches:
-      - feature/playwright-orchestrator
 
 permissions:
   contents: write
