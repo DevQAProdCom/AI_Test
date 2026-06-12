@@ -7,11 +7,19 @@ namespace Tests.AI_TEST.Playwright
     [TestFixture]
     public class Tests : PageTest
     {
+        public override BrowserNewContextOptions ContextOptions()
+        {
+            return new BrowserNewContextOptions
+            {
+                IgnoreHTTPSErrors = true,
+            };
+        }
+
         [Test]
         public async Task GitHubHomePage_ElementHasExpectedText()
         {
             await Page.GotoAsync("https://github.com/");
-            var element = Page.GetByRole(AriaRole.Link, new() { Name = "Pricing" });
+            var element = Page.GetByRole(AriaRole.Link, new() { Name = "Pricing" }).First;
             await Expect(element).ToHaveTextAsync("Pricing");
         }
     }
